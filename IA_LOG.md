@@ -127,3 +127,36 @@ Gemini va tractar les respostes com si fossin un model separat amb referència (
 
 **Solució/adaptació manual:**
 Com que `answers` ja està incrustat dins del document de la pregunta, vaig utilitzar directament la ruta per punts `.populate('answers.author', 'name')`, que és molt més neta i senzilla.
+
+
+---
+
+### Ús 8 — Listado con filtros y respuestas en Mongoose
+
+**Prompt literal:**
+> "Com faig a Mongoose la funció per llistar preguntes amb paginació del servidor i 2 filtres combinats (per id d'exercici i cerca de text al títol o text)? I la funció per afegir una resposta a l'array de subdocuments?"
+
+**Resposta de la IA:**
+Va donar la funció `listQuestions` amb `skip`, `limit`, `countDocuments` i `addAnswer` amb `$push`.
+
+**Incoherències detectades:**
+Al cercador de text només buscava pel títol ignorant el contingut del camp `text` de la pregunta, i a `addAnswer` intentava carregar tot el document i guardar-lo amb `save()`.
+
+**Solució/adaptació manual:**
+Vaig canviar el filtre de cerca perquè busqui a tots dos camps amb `$or: [{ title: regex }, { text: regex }]`, i a `addAnswer` vaig fer servir `findOneAndUpdate` amb `$push` atòmic i populate dels noms d'usuari.
+
+---
+
+### Ús 9 — Component d'Angular integrat
+
+**Prompt literal:**
+> "Com faig un component standalone a Angular per mostrar la llista paginada de preguntes d'un exercici concret, amb el cercador de text i que es pugui desplegar dins de la taula d'exercicis?"
+
+**Resposta de la IA:**
+Va proposar el component `QuestionsList` amb signals per gestionar la paginació i la cerca.
+
+**Incoherències detectades:**
+La IA intentava obtenir l'id de l'exercici des dels paràmetres de la ruta amb `ActivatedRoute`, però l'enunciat demana que estigui integrat a la vista d'una entitat existent (els exercicis).
+
+**Solució/adaptació manual:**
+Vaig passar l'exercici com a `input.required<Exercise>()` al component, i vaig afegir un botó "Preguntas" a `exercises-list.html` amb el mètode `toggleQuestions` per desplegar la taula de preguntes a sota de cada fila d'exercici.

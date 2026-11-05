@@ -104,6 +104,13 @@ export const Schemas = {
             ...listQuery,
             // Los usuarios solo se pueden ordenar por nombre
             ...sortQuery(['name'])
+        }),
+        question: Joi.object({
+            ...listQuery,
+            // Filtro por ejercicio: tiene que ser un id valido de MongoDB
+            exercise: Joi.string().regex(OBJECT_ID),
+            // Columnas por las que se pueden ordenar las preguntas
+            ...sortQuery(['title', 'createdAt'])
         })
     },
     // Validaciones de las rutas de autenticacion

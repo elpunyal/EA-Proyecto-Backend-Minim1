@@ -1,6 +1,7 @@
 import mongoose, { HydratedDocument } from 'mongoose';
 import Exercise from '../models/Exercise';
 import Question, { IQuestion } from '../models/Question';
+import { buildPageInfo, buildSort, escapeRegex, getSkip } from '../utils/pagination';
 
 // Datos necesarios para crear una pregunta.
 // El ejercicio llega como texto (ID) desde el cuerpo de la peticion.
@@ -85,6 +86,63 @@ export const hardDeleteQuestion = (questionId: string): Promise<QuestionDocument
 
 // acordarme q el listado y los filtros van en el comit 3
 
+// Parametros de un listado: los que llegan ya validados por ValidateQuery
+// (sort es la columna por la que ordenar y order el sentido: asc o desc)
+export type ListQuestionsInput = { page: number; limit: number; search?: string; exercise?: string; sort?: string; order?: 'asc' | 'desc' };
+
+// Devuelve una pagina de preguntas, filtrada por ejercicio y/o por texto en el titulo o en el texto.
+// El ADMIN ve todas las preguntas; cualquier otra sesion solo las activas (isDeleted: false).
+export const listQuestions = async ({ page, limit, search, exercise, sort, order }: ListQuestionsInput, isAdmin: boolean) => {
+
+    // El ADMIN consulta todo, asi que su filtro empieza vacio; el resto empieza solo con las activas
+    const filter: Record<string, unknown> = isAdmin ? {} : { isDeleted: false };
+
+    // Filtro exacto por ejercicio, si se ha pedido
+    if (exercise) {
+        filter.exercise = exercise;
+    }
+
+    // Buscador: el texto puede estar en el titulo o en el texto
+    if (search) {
+        const regex = new RegExp(escapeRegex(search), 'i');
+        filter.$or = [{ title: regex }, { text: regex }];
+    }
+
+    // Pedimos la pagina y el total a la vez, con el MISMO filtro
+    const [questions, total] = await Promise.all([
+        // Ordenamos por la columna pedida (por defecto la fecha de creacion)
+        Question.find(filter)
+            .sort(buildSort(sort, order, 'createdAt'))
+            .skip(getSkip(page, limit))
+            .limit(limit)
+            .populate('exercise')
+            .populate('author', 'name')
+            .populate('answers.author', 'name'),
+        Question.countDocuments(filter)
+    ]);
+
+    return { questions, pagination: buildPageInfo(page, limit, total) };
+
+};
+
+// Funcion que se encarga de añadir una respuesta a una pregunta.
+// El autor de la respuesta no viene del body: el controlador nos pasa el id que sale del token.
+// Filtramos isDeleted: false para que no se pueda responder una pregunta borrada
+// (devolvera null y el controlador respondera 404).
+export const addAnswer = (questionId: string, text: string, authorId: string): Promise<QuestionDocument | null> => {
+
+    // $push añade la repsuesta al final del array answers
+    return Question.findOneAndUpdate(
+        { _id: questionId, isDeleted: false },
+        { $push: { answers: { text, author: new mongoose.Types.ObjectId(authorId) } } },
+        { new: true }
+    )
+        .populate('exercise')
+        .populate('author', 'name')
+        .populate('answers.author', 'name');
+
+};
+
 // Exportamos todas las funciones para poder utilizarlas desde el controlador
 export default {
 
@@ -96,6 +154,10 @@ export default {
 
     softDeleteQuestion,
 
-    hardDeleteQuestion
+    hardDeleteQuestion,
+
+    listQuestions,
+
+    addAnswer
 
 };
