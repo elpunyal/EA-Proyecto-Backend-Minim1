@@ -5,6 +5,7 @@ import { NextFunction, Request, Response } from 'express';
 import { EXERCISE_CATEGORIES,  IExercise } from '../models/Exercise';
 import { DAYS_OF_WEEK,  IWorkout } from '../models/Workout';
 import { IUser, USER_ROLES } from '../models/User';
+import { IQuestion } from '../models/Question';
 
 // Funcion que se encarga de validar los datos que llegan en una petición
 // Recibe un esquema de Joi y comprueba que el body cumple sus condiciones
@@ -184,6 +185,31 @@ export const Schemas = {
             // El resto de campos son opcionales
             description: Joi.string().allow('').optional(),
             exercises: Joi.array().items(Joi.string().regex(OBJECT_ID))
+        })
+    },
+
+    // Validaciones relacionadas con las preguntas
+    question: {
+        // Esquema que se utiliza cuando queremos crear una pregunta.
+        // El autor no se pide aqui: sale del token
+        create: Joi.object<IQuestion>({
+            // El titulo y el texto son obligatorios
+            title: Joi.string().trim().required().example('Como se hace bien el press de banca?'),
+            text: Joi.string().trim().required().example('Me duele el hombro al bajar la barra'),
+
+            // El ejercicio tiene que ser un id valido de MongoDB
+            exercise: Joi.string().regex(OBJECT_ID).required().example('6ab2d1ad9ada2730451295a7')
+        }),
+
+        // Esquema que se utiliza para actualizar una pregunta (el ejercicio no se cambia)
+        update: Joi.object<IQuestion>({
+            title: Joi.string().trim().required(),
+            text: Joi.string().trim().required()
+        }),
+
+        // Esquema que se utiliza para responder una pregunta
+        answer: Joi.object<{ text: string }>({
+            text: Joi.string().trim().required().example('Prueba a bajar la barra mas despacio')
         })
     },
 
