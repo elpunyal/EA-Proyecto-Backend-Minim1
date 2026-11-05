@@ -1,7 +1,7 @@
 import mongoose, { HydratedDocument } from 'mongoose';
 import Exercise from '../models/Exercise';
 import Question, { IQuestion } from '../models/Question';
-import { buildPageInfo, buildSort, escapeRegex, getSkip } from '../utils/pagination';
+import { buildPageInfo, escapeRegex, getSkip } from '../utils/pagination';
 
 // Datos necesarios para crear una pregunta.
 // El ejercicio llega como texto (ID) desde el cuerpo de la peticion.
@@ -87,12 +87,11 @@ export const hardDeleteQuestion = (questionId: string): Promise<QuestionDocument
 // acordarme q el listado y los filtros van en el comit 3
 
 // Parametros de un listado: los que llegan ya validados por ValidateQuery
-// (sort es la columna por la que ordenar y order el sentido: asc o desc)
-export type ListQuestionsInput = { page: number; limit: number; search?: string; exercise?: string; sort?: string; order?: 'asc' | 'desc' };
+export type ListQuestionsInput = { page: number; limit: number; search?: string; exercise?: string };
 
 // Devuelve una pagina de preguntas, filtrada por ejercicio y/o por texto en el titulo o en el texto.
 // El ADMIN ve todas las preguntas; cualquier otra sesion solo las activas (isDeleted: false).
-export const listQuestions = async ({ page, limit, search, exercise, sort, order }: ListQuestionsInput, isAdmin: boolean) => {
+export const listQuestions = async ({ page, limit, search, exercise }: ListQuestionsInput, isAdmin: boolean) => {
 
     // El ADMIN consulta todo, asi que su filtro empieza vacio; el resto empieza solo con las activas
     const filter: Record<string, unknown> = isAdmin ? {} : { isDeleted: false };
@@ -110,9 +109,9 @@ export const listQuestions = async ({ page, limit, search, exercise, sort, order
 
     // Pedimos la pagina y el total a la vez, con el MISMO filtro
     const [questions, total] = await Promise.all([
-        // Ordenamos por la columna pedida (por defecto la fecha de creacion)
+        // Ordenamos por la fecha de creacion (y por _id para que el orden no cambie entre paginas)
         Question.find(filter)
-            .sort(buildSort(sort, order, 'createdAt'))
+            .sort({ createdAt: 1, _id: 1 })
             .skip(getSkip(page, limit))
             .limit(limit)
             .populate('exercise')

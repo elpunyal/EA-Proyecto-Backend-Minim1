@@ -108,9 +108,7 @@ export const Schemas = {
         question: Joi.object({
             ...listQuery,
             // Filtro por ejercicio: tiene que ser un id valido de MongoDB
-            exercise: Joi.string().regex(OBJECT_ID),
-            // Columnas por las que se pueden ordenar las preguntas
-            ...sortQuery(['title', 'createdAt'])
+            exercise: Joi.string().regex(OBJECT_ID)
         })
     },
     // Validaciones de las rutas de autenticacion

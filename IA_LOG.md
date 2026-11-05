@@ -160,3 +160,36 @@ La IA intentava obtenir l'id de l'exercici des dels paràmetres de la ruta amb `
 
 **Solució/adaptació manual:**
 Vaig passar l'exercici com a `input.required<Exercise>()` al component, i vaig afegir un botó "Preguntas" a `exercises-list.html` amb el mètode `toggleQuestions` per desplegar la taula de preguntes a sota de cada fila d'exercici.
+
+
+---
+
+### Ús 10 — Controlador i rutes a Express amb permisos
+
+**Prompt literal:**
+> "Com faig el controlador i les rutes a Express per a `/questions`, protegint que només el propietari o ADMIN pugui editar o esborrar (403) i aplicant la regla de negoci de no respondre la pròpia pregunta (409)?"
+
+**Resposta de la IA:**
+Va proposar el controlador amb la lògica de comprovació d'autoria i el router d'Express amb les validacions de Joi.
+
+**Incoherències detectades:**
+Al controlador d'eliminar intentava comprovar els permisos directament a la ruta abans de carregar el document, sense saber qui n'era l'autor, i no tenia en compte el rol ADMIN per permetre l'edició o esborrat.
+
+**Solució/adaptació manual:**
+Vaig fer que primer es busqui la pregunta amb `getQuestionById`, i després es comprovi `String(found.author._id) !== req.user!.id && !isAdmin` per retornar el 403, a més de retornar 409 si intenta respondre la seva pròpia pregunta.
+
+---
+
+### Ús 11 — Formulari reactiu i resposta a Angular
+
+**Prompt literal:**
+> "Com faig el component de formulari `QuestionForm` amb Reactive Forms per crear preguntes, i la part visual per escriure i enviar respostes des del llistat?"
+
+**Resposta de la IA:**
+Va donar el formulari amb `FormBuilder` i el camp de text per enviar la resposta a l'endpoint.
+
+**Incoherències detectades:**
+Al formulari afegia un camp per a l'exercici i un per a l'autor al formulari HTML, quan l'exercici arriba per `input` del pare i l'autor s'assigna al backend mitjançant el token.
+
+**Solució/adaptació manual:**
+Vaig netejar el formulari deixant només `title` i `text` amb `Validators.required`, vinculant l'id de l'exercici directament al payload del servei, i vaig afegir la comprovació `canAnswer` per amagar el formulari de resposta si la pregunta és pròpia.

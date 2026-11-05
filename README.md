@@ -134,3 +134,14 @@ src/
   utils/
     password.ts      Cifra y comprueba contraseñas con scrypt
 ```
+
+## Presa de decisions
+
+- He triat `Exercise` com a entitat de les preguntes perquè té sentit tenir dubtes sobre els exercicis del gimnàs.
+- L'autor no es demana al body: surt del token JWT per seguretat.
+- Com a regla del 409, no deixo que ningú respongui la seva pròpia pregunta.
+
+## No implementat
+
+- **Swagger de `/questions`:** No està fet. És l'únic requisit de l'enunciat que continua faltant, ja que per falta de temps no he pogut afegir les anotacions OpenAPI/Swagger dels nous endpoints.
+- **Botons de "Borrar" i "Eliminar definitivament" al frontend:** No s'han posat a la pantalla. A l'API està implementat i provat tant el borrat lògic com el definitiu (soft i hard delete), i al servei d'Angular estan els mètodes. Tot i que l'enunciat no demana expressament aquests botons al frontend (es demanaven 3 crides a la pantalla i se'n fan 4), per falta de temps no s'han afegit a la interfície.
